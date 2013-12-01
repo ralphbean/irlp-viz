@@ -62,6 +62,9 @@ class PolyMap(tw2.polymaps.PolyMap):
     id = 'polymap'
     data_url = '/controllers/polymap/'
     interact = True
+    zoom = 2.1
+    center_latlon = {'lat': 35.8, 'lon': -344.2}
+    hash = True
     cloudmade_api_key = "1a1b06b230af4efdbb989ea99e9841af"
     cloudmade_tileset = 'midnight-commander'
     css_class = 'midnight-commander-extras'
