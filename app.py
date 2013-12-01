@@ -38,6 +38,7 @@ svg {
 </html>
 """
 
+
 def read_data(filename):
     with open(filename, 'r') as f:
         rows = [row.split('\t') for row in f.readlines()]
@@ -52,6 +53,7 @@ def read_data(filename):
 # http://status.irlp.net/nohtmlstatus.txt.bz2
 filename = 'nohtmlstatus.txt'
 data = read_data(filename)
+
 
 @app.route('/')
 def index():
