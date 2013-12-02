@@ -3,3 +3,4 @@ tw2.polymaps
 simplejson
 fastkml
 shapely
+PyYAML

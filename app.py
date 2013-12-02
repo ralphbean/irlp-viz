@@ -1,7 +1,12 @@
-import random
+import math
+import uuid
+
 import geojson
 import flask
 import tw2.polymaps
+import yaml
+import fastkml
+import shapely.geometry
 
 from tw2.polymaps.geojsonify import geojsonify
 from tw2.core.middleware import make_middleware
@@ -55,8 +60,8 @@ filename = 'nohtmlstatus.txt'
 data = read_data(filename)
 
 
-@app.route('/')
-def index():
+@app.route('/polymap')
+def polymap():
     return flask.templating.render_template_string(template, map=PolyMap)
 
 
@@ -94,6 +99,45 @@ class PolyMap(tw2.polymaps.PolyMap):
             features.append(feature)
 
         return geojson.FeatureCollection(features=features)
+
+
+def circle_points(x0, y0, r, points=10):
+    for i in range(points):
+        theta = 2.0 * math.pi * ((i + 1) / float(points))
+        x = (math.cos(theta) * r) + x0
+        y = (math.sin(theta) * r) + y0
+        yield (x, y)
+
+
+@app.route('/kml')
+def kml():
+    k = fastkml.kml.KML()
+    ns = '{http://www.opengis.net/kml/2.2}'
+    d = fastkml.kml.Document(
+        ns, 'id', 'IRLP nodes',
+        'IRLP nodes from http://status.irlp.net/nohtmlstatus.txt.bz2')
+    f = fastkml.kml.Folder(ns, 'id', 'IRLP nodes', 'IRLP nodes')
+    d.append(f)
+
+    size = 1
+    for row in data:
+        try:
+            lon = float(row['long'])
+            lat = float(row['lat'])
+        except ValueError:
+            #print "failed on %r" % row
+            continue
+
+        p = fastkml.kml.Placemark(
+            ns, 'id-' + str(uuid.uuid4()), row['CallSign'], yaml.dump(row))
+        points = list(circle_points(lon, lat, size, 10))
+        p.geometry = shapely.geometry.Polygon(points)
+        f.append(p)
+
+    body = k.to_string(prettyprint=True)
+    response = flask.make_response(body)
+    response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
+    return response
 
 
 if __name__ == '__main__':
